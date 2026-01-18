@@ -1,0 +1,9 @@
+{
+  "name": "codex-reviewer",
+  "version": "1.0.0",
+  "description": "Codex CLI を使ったコードレビュー・相談スキル",
+  "author": {
+    "name": "tktm04"
+  },
+  "keywords": ["review", "codex", "ai-collaboration"]
+}
