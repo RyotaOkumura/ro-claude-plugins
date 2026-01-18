@@ -8,8 +8,8 @@
   },
   "plugins": [
     {
-      "name": "codex-reviewer",
-      "source": "./plugins/codex-reviewer",
+      "name": "codex",
+      "source": "./plugins/codex",
       "description": "Codex CLI を使ったコードレビュー・相談スキル",
       "version": "1.0.0"
     }
