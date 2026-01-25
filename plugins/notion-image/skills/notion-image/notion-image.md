@@ -1,7 +1,5 @@
 ---
-name: notion-image
-description: 画像ファイルをNotionに直接アップロードする。Notionに画像を追加したい時やスクリーンショットを共有したい時に使用する。
-allowed-tools: Bash(notion-upload:*)
+description: 画像をNotionに直接アップロード。使用場面: (1) Notionに画像を追加したい時、(2) スクリーンショットを共有したい時。トリガー: "notion画像", "画像アップロード", "/notion-image"
 ---
 
 # Notion Image Upload
@@ -33,8 +31,8 @@ notion-upload <image_file_path> [page_id]
 
 | パラメータ | 必須 | 説明 |
 |-----------|------|------|
-| `<image_file_path>` | Yes | アップロードする画像ファイルのパス |
-| `[page_id]` | No | 画像を追加するNotionページID（省略時はDEFAULT_PAGE_ID使用） |
+| `<image_file_path>` | ○ | アップロードする画像ファイルのパス |
+| `[page_id]` | △ | 画像を追加するNotionページID（省略時はDEFAULT_PAGE_ID使用） |
 
 ## 出力形式
 
@@ -76,10 +74,10 @@ notion-upload /tmp/screenshot.png abc123def456
 ### Claude Codeでの使用
 
 ユーザー: 「この画像をNotionにアップロードして」
--> ページIDを確認し、スキルを実行
+→ ページIDを確認し、スキルを実行
 
 ユーザー: 「スクリーンショットをNotionページXXXに追加して」
--> ページIDとファイルパスを特定し、スキルを実行
+→ ページIDとファイルパスを特定し、スキルを実行
 
 ## ページIDの取得方法
 

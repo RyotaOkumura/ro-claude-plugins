@@ -2,5 +2,6 @@
   "name": "codex",
   "version": "1.0.0",
   "description": "Codex CLI を使ったコードレビュー・相談スキル",
-  "keywords": ["review", "codex", "ai-collaboration"]
+  "keywords": ["review", "codex", "ai-collaboration"],
+  "skills": ["./skills/codex"]
 }

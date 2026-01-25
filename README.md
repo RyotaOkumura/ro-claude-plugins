@@ -13,11 +13,15 @@ cd tk-claude-plugins
 ./scripts/setup.sh all
 
 # または個別にセットアップ
-./scripts/setup.sh notion-image
 ./scripts/setup.sh codex
+./scripts/setup.sh gemini
+./scripts/setup.sh notion-image
 ```
 
+セットアップ後、**Claude Codeを再起動**するとスキルが認識されます。
+
 セットアップスクリプトが自動で:
+- `~/.claude/skills/` にスキルを登録
 - 設定ディレクトリ作成
 - 設定ファイルテンプレート作成
 - コマンドのPATH追加
@@ -57,12 +61,63 @@ Codex CLI を使ったコードレビュー・相談スキル。
 
 **使用例:**
 ```bash
+# ラッパースクリプト
+codex-review "このコードをレビューして"
+
+# 直接実行
 codex exec --full-auto --sandbox read-only --cd /path/to/project "このコードをレビューして"
+```
+
+**設定ファイル:** `~/.config/codex/.env`
+```bash
+# サンドボックスモード: read-only | workspace-write | full-write
+CODEX_SANDBOX=read-only
 ```
 
 ---
 
-### 2. notion-image
+### 2. gemini
+
+Gemini CLI を使ったコードレビュー・相談スキル。
+
+**機能:**
+- コードレビュー
+- 実装方針の相談
+- バグの調査
+- リファクタリング提案
+
+**セットアップ:**
+```bash
+./scripts/setup.sh gemini
+```
+
+**手動ステップ:**
+
+1. **Gemini CLIをインストール**
+   ```bash
+   npm install -g @google/gemini-cli
+   ```
+
+2. **Google認証を設定**（初回実行時に自動で認証フローが開始）
+
+**使用例:**
+```bash
+# ラッパースクリプト
+gemini-review "このコードをレビューして"
+
+# 直接実行
+gemini -p "このコードをレビューして"
+```
+
+**設定ファイル:** `~/.config/gemini/.env`
+```bash
+# モデル指定（空欄でデフォルト）
+GEMINI_MODEL=
+```
+
+---
+
+### 3. notion-image
 
 Notionに画像を直接アップロードするスキル（Notion File Uploads API使用）。
 
@@ -122,23 +177,21 @@ notion-upload /tmp/screenshot.png PAGE_ID
 
 ## Claude Codeへの登録
 
-`~/.claude/settings.json` に追加:
+セットアップスクリプトが自動で `~/.claude/skills/` にスキルを登録します：
 
-```json
-{
-  "plugins": [
-    "/path/to/tk-claude-plugins"
-  ]
-}
+```bash
+./scripts/setup.sh all
 ```
 
-または、プロジェクトの `CLAUDE.md` に追記:
+登録後、**Claude Codeを再起動**するとスキルが認識されます。
 
-```markdown
-## Skills
+手動で登録する場合：
 
-- /path/to/tk-claude-plugins/plugins/codex
-- /path/to/tk-claude-plugins/plugins/notion-image
+```bash
+mkdir -p ~/.claude/skills
+ln -sf /path/to/tk-claude-plugins/plugins/codex/skills/codex ~/.claude/skills/codex
+ln -sf /path/to/tk-claude-plugins/plugins/gemini/skills/gemini ~/.claude/skills/gemini
+ln -sf /path/to/tk-claude-plugins/plugins/notion-image/skills/notion-image ~/.claude/skills/notion-image
 ```
 
 ## Usage
@@ -147,11 +200,29 @@ Claude Codeで以下のように使用:
 
 ```
 # codex
-「このコードをレビューして」
+「codexでこのコードをレビューして」
+「codexに相談して」
+
+# gemini
+「geminiでこのコードをレビューして」
+「geminiに相談して」
 
 # notion-image
 「この画像をNotionにアップロードして」
 /notion-image /path/to/image.png PAGE_ID
+```
+
+コマンドラインからも使用可能:
+
+```bash
+# codex
+codex-review "このコードをレビューして"
+
+# gemini
+gemini-review "このコードをレビューして"
+
+# notion-image
+notion-upload /path/to/image.png PAGE_ID
 ```
 
 ## License

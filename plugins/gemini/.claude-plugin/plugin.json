@@ -1,0 +1,7 @@
+{
+  "name": "gemini",
+  "version": "1.0.0",
+  "description": "Gemini CLI を使ったコードレビュー・相談スキル",
+  "keywords": ["review", "gemini", "ai-collaboration"],
+  "skills": ["./skills/gemini"]
+}
