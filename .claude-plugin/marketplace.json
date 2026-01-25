@@ -12,6 +12,12 @@
       "source": "./plugins/codex",
       "description": "Codex CLI を使ったコードレビュー・相談スキル",
       "version": "1.0.0"
+    },
+    {
+      "name": "notion-r2-image",
+      "source": "./plugins/notion-r2-image",
+      "description": "NotionにR2経由で画像をアップロードするスキル（プライベートバケット + Workers認証）",
+      "version": "1.0.0"
     }
   ]
 }

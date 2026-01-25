@@ -1,0 +1,21 @@
+# Environment files with secrets
+.env
+*.env.local
+
+# Wrangler
+.wrangler/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs
+*.log
