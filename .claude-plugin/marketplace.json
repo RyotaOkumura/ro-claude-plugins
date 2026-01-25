@@ -1,10 +1,7 @@
 {
   "name": "tk-plugins",
-  "owner": {
-    "name": "tktm04"
-  },
   "metadata": {
-    "description": "tk's personal Claude Code plugins"
+    "description": "Claude Code plugins collection"
   },
   "plugins": [
     {
@@ -14,10 +11,10 @@
       "version": "1.0.0"
     },
     {
-      "name": "notion-r2-image",
-      "source": "./plugins/notion-r2-image",
-      "description": "NotionにR2経由で画像をアップロードするスキル（プライベートバケット + Workers認証）",
-      "version": "1.0.0"
+      "name": "notion-image",
+      "source": "./plugins/notion-image",
+      "description": "NotionにFile Uploads APIで画像を直接アップロードするスキル",
+      "version": "2.0.0"
     }
   ]
 }

@@ -2,6 +2,29 @@
 
 Claude Code plugins collection.
 
+## Quick Start
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/your-username/tk-claude-plugins.git
+cd tk-claude-plugins
+
+# 全プラグインをセットアップ
+./scripts/setup.sh all
+
+# または個別にセットアップ
+./scripts/setup.sh notion-image
+./scripts/setup.sh codex
+```
+
+セットアップスクリプトが自動で:
+- 設定ディレクトリ作成
+- 設定ファイルテンプレート作成
+- コマンドのPATH追加
+- 残りの手動ステップを案内
+
+---
+
 ## Plugins
 
 ### 1. codex
@@ -14,9 +37,14 @@ Codex CLI を使ったコードレビュー・相談スキル。
 - バグの調査
 - リファクタリング提案
 
-**前提条件:**
-- Codex CLI: `npm install -g @openai/codex`
-- OpenAI API Key: 環境変数 `OPENAI_API_KEY` に設定
+**セットアップ:**
+```bash
+./scripts/setup.sh codex
+```
+
+**手動ステップ:**
+1. `npm install -g @openai/codex`
+2. `export OPENAI_API_KEY=sk-xxx` を `.zshrc` に追加
 
 **使用例:**
 ```bash
@@ -47,65 +75,19 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
                                                  └─────────────────┘
 ```
 
-**セットアップ手順:**
+**セットアップ:**
+```bash
+./scripts/setup.sh notion-image
+```
 
-1. **Notion Integrationを作成**
-   - https://www.notion.so/my-integrations にアクセス
-   - 「New integration」で作成
-   - Capabilities: Read content ✅, Insert content ✅
-   - Internal Integration Token（`ntn_`で始まる）をコピー
-
-2. **設定ファイルを作成**
-   ```bash
-   mkdir -p ~/.config/notion-image
-   chmod 700 ~/.config/notion-image
-   ```
-
-   `~/.config/notion-image/.env` を作成:
-   ```bash
-   NOTION_TOKEN=ntn_xxxxxxxxxxxxx
-   DEFAULT_PAGE_ID=              # オプション
-   ```
-
-   ```bash
-   chmod 600 ~/.config/notion-image/.env
-   ```
-
-3. **コマンドをPATHに追加**
-   ```bash
-   mkdir -p ~/bin
-   ln -s $(pwd)/plugins/notion-image/scripts/upload_to_notion.sh ~/bin/notion-upload
-   ```
-
-   ※ `~/bin` がPATHに含まれていない場合は `.zshrc` 等に追加:
-   ```bash
-   export PATH="$HOME/bin:$PATH"
-   ```
-
-4. **ページにIntegrationを接続**
-   - アップロード先のNotionページを開く
-   - 右上「...」→「接続」→作成したIntegrationを選択
-
-5. **テスト**
-   ```bash
-   notion-upload /path/to/image.png PAGE_ID
-   ```
+**手動ステップ:**
+1. https://www.notion.so/my-integrations でIntegration作成
+2. `~/.config/notion-image/.env` にトークンを記入
+3. Notionでページに「接続」からIntegrationを追加
 
 **使用例:**
 ```bash
-# 画像をアップロード
-notion-upload /tmp/screenshot.png abc123def456
-
-# 出力例:
-# Uploading: /tmp/screenshot.png
-#   -> Content-Type: image/png
-# Step 1/3: Creating upload object...
-#   -> Upload ID: xxx-xxx-xxx
-# Step 2/3: Sending file...
-#   -> File sent successfully
-# Step 3/3: Attaching to page...
-#   -> Attached to page: abc123def456
-# Upload successful!
+notion-upload /tmp/screenshot.png PAGE_ID
 ```
 
 **制限事項:**
@@ -117,9 +99,39 @@ notion-upload /tmp/screenshot.png abc123def456
 
 ---
 
-## Installation
+## Claude Codeへの登録
 
-このプラグインコレクションをClaude Codeで使用するには、Claude Codeの設定でこのリポジトリを追加してください。
+`~/.claude/settings.json` に追加:
+
+```json
+{
+  "plugins": [
+    "/path/to/tk-claude-plugins"
+  ]
+}
+```
+
+または、プロジェクトの `CLAUDE.md` に追記:
+
+```markdown
+## Skills
+
+- /path/to/tk-claude-plugins/plugins/codex
+- /path/to/tk-claude-plugins/plugins/notion-image
+```
+
+## Usage
+
+Claude Codeで以下のように使用:
+
+```
+# codex
+「このコードをレビューして」
+
+# notion-image
+「この画像をNotionにアップロードして」
+/notion-image /path/to/image.png PAGE_ID
+```
 
 ## License
 
