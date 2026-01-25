@@ -52,11 +52,9 @@ source ~/.zshrc
 ### 2. トークンを設定ファイルに記入
 
 ```bash
-# 設定ファイルを編集
-nano ~/.config/notion-image/.env
+# ntn_xxx... の部分をコピーしたトークンに置き換えて実行
+echo "NOTION_TOKEN=ntn_xxxxxxxxxxxxx" > ~/.config/notion-image/.env
 ```
-
-`NOTION_TOKEN=ntn_xxxxxxxxxxxxx` の部分を編集
 
 ### 3. ページにIntegrationを接続
 

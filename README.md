@@ -43,8 +43,17 @@ Codex CLI を使ったコードレビュー・相談スキル。
 ```
 
 **手動ステップ:**
-1. `npm install -g @openai/codex`
-2. `export OPENAI_API_KEY=sk-xxx` を `.zshrc` に追加
+
+1. **Codex CLIをインストール**
+   ```bash
+   npm install -g @openai/codex
+   ```
+
+2. **APIキーを設定**
+   ```bash
+   echo 'export OPENAI_API_KEY=sk-xxx' >> ~/.zshrc
+   source ~/.zshrc
+   ```
 
 **使用例:**
 ```bash
@@ -81,9 +90,21 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
 ```
 
 **手動ステップ:**
-1. https://www.notion.so/my-integrations でIntegration作成
-2. `~/.config/notion-image/.env` にトークンを記入
-3. Notionでページに「接続」からIntegrationを追加
+
+1. **Notion Integrationを作成**
+   - https://www.notion.so/my-integrations にアクセス
+   - 「New integration」→ 名前入力 → Submit
+   - Capabilities: Read content ✅, Insert content ✅
+   - トークン（`ntn_xxx...`）をコピー
+
+2. **トークンを設定ファイルに記入**
+   ```bash
+   # ntn_xxx... の部分をコピーしたトークンに置き換えて実行
+   echo "NOTION_TOKEN=ntn_xxxxxxxxxxxxx" > ~/.config/notion-image/.env
+   ```
+
+3. **Notionでページに接続**
+   - アップロード先ページを開く → 右上「...」→「接続」→ Integration選択
 
 **使用例:**
 ```bash
