@@ -1,6 +1,6 @@
 # tk-claude-plugins
 
-tk's personal Claude Code plugins collection.
+Claude Code plugins collection.
 
 ## Plugins
 
@@ -37,8 +37,8 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
 **アーキテクチャ:**
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Claude Code    │────>│ upload_to_notion │────>│   Notion API    │
-│                 │     │     .sh          │     │ (File Uploads)  │
+│  Claude Code    │────>│  notion-upload   │────>│   Notion API    │
+│                 │     │                  │     │ (File Uploads)  │
 └─────────────────┘     └──────────────────┘     └────────┬────────┘
                                                           │
                                                  ┌────────▼────────┐
@@ -52,6 +52,7 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
 1. **Notion Integrationを作成**
    - https://www.notion.so/my-integrations にアクセス
    - 「New integration」で作成
+   - Capabilities: Read content ✅, Insert content ✅
    - Internal Integration Token（`ntn_`で始まる）をコピー
 
 2. **設定ファイルを作成**
@@ -70,19 +71,30 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
    chmod 600 ~/.config/notion-image/.env
    ```
 
-3. **ページにIntegrationを接続**
+3. **コマンドをPATHに追加**
+   ```bash
+   mkdir -p ~/bin
+   ln -s $(pwd)/plugins/notion-image/scripts/upload_to_notion.sh ~/bin/notion-upload
+   ```
+
+   ※ `~/bin` がPATHに含まれていない場合は `.zshrc` 等に追加:
+   ```bash
+   export PATH="$HOME/bin:$PATH"
+   ```
+
+4. **ページにIntegrationを接続**
    - アップロード先のNotionページを開く
    - 右上「...」→「接続」→作成したIntegrationを選択
 
-4. **テスト**
+5. **テスト**
    ```bash
-   ~/個人開発/tk-claude-plugins/plugins/notion-image/scripts/upload_to_notion.sh /path/to/image.png PAGE_ID
+   notion-upload /path/to/image.png PAGE_ID
    ```
 
 **使用例:**
 ```bash
 # 画像をアップロード
-./plugins/notion-image/scripts/upload_to_notion.sh /tmp/screenshot.png abc123def456
+notion-upload /tmp/screenshot.png abc123def456
 
 # 出力例:
 # Uploading: /tmp/screenshot.png

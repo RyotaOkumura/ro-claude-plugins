@@ -9,7 +9,7 @@ description: 画像をNotionに直接アップロード
 ## 実行方法
 
 ```bash
-~/個人開発/tk-claude-plugins/plugins/notion-image/scripts/upload_to_notion.sh <image_file_path> [page_id]
+notion-upload <image_file_path> [page_id]
 ```
 
 ## 手順
@@ -17,13 +17,14 @@ description: 画像をNotionに直接アップロード
 1. ユーザーから画像ファイルパスを受け取る
 2. ページIDを確認（指定がなければDEFAULT_PAGE_ID使用）
 3. ファイルが存在し、対応形式（png, jpg, gif, webp, svg）であることを確認
-4. upload_to_notion.sh を実行
+4. `notion-upload` コマンドを実行
 5. 結果をユーザーに報告
 
 ## 前提条件
 
 - `~/.config/notion-image/.env` にNOTION_TOKENが設定済み
 - 対象ページでIntegrationが「接続」されている
+- `notion-upload` コマンドがPATHに追加されている
 
 ## 出力例
 

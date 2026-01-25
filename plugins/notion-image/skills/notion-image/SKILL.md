@@ -19,13 +19,13 @@ description: 画像をNotionに直接アップロード。使用場面: (1) Noti
   - https://www.notion.so/my-integrations でIntegration作成
   - 対象ページで「接続」からIntegrationを追加
 
-- **依存ツール** がインストールされていること
-  - `curl`
+- **コマンド** がPATHに追加されていること
+  - `notion-upload` コマンドが使用可能
 
 ## 実行コマンド
 
 ```bash
-~/個人開発/tk-claude-plugins/plugins/notion-image/scripts/upload_to_notion.sh <image_file_path> [page_id]
+notion-upload <image_file_path> [page_id]
 ```
 
 ## パラメータ
@@ -66,10 +66,10 @@ Upload successful!
 
 ```bash
 # デフォルトページにアップロード
-~/個人開発/tk-claude-plugins/plugins/notion-image/scripts/upload_to_notion.sh /tmp/screenshot.png
+notion-upload /tmp/screenshot.png
 
 # 特定ページにアップロード
-~/個人開発/tk-claude-plugins/plugins/notion-image/scripts/upload_to_notion.sh /tmp/screenshot.png abc123def456
+notion-upload /tmp/screenshot.png abc123def456
 ```
 
 ### Claude Codeでの使用
