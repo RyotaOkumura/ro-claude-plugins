@@ -26,7 +26,7 @@ allowed-tools: Bash(notion-upload:*)
 ## 実行コマンド
 
 ```bash
-notion-upload <image_file_path> [page_id]
+notion-upload <image_file_path> [page_id] [options]
 ```
 
 ## パラメータ
@@ -35,6 +35,13 @@ notion-upload <image_file_path> [page_id]
 |-----------|------|------|
 | `<image_file_path>` | Yes | アップロードする画像ファイルのパス |
 | `[page_id]` | No | 画像を追加するNotionページID（省略時はDEFAULT_PAGE_ID使用） |
+
+## オプション
+
+| オプション | 説明 |
+|-----------|------|
+| `--after <block_id>` | 指定したブロックIDの直後に画像を挿入（省略時はページ末尾に追加） |
+| `--caption <text>` | 画像の下にキャプションテキストを追加 |
 
 ## 出力形式
 
@@ -63,7 +70,7 @@ Upload successful!
 
 ## 使用例
 
-### 基本的な使用
+### 基本的な使用（ページ末尾に追加）
 
 ```bash
 # デフォルトページにアップロード
@@ -71,6 +78,16 @@ notion-upload /tmp/screenshot.png
 
 # 特定ページにアップロード
 notion-upload /tmp/screenshot.png abc123def456
+```
+
+### 特定位置に挿入
+
+```bash
+# 指定ブロックの直後に挿入
+notion-upload /tmp/screenshot.png PAGE_ID --after BLOCK_ID
+
+# キャプション付きで挿入
+notion-upload /tmp/screenshot.png PAGE_ID --after BLOCK_ID --caption "Figure 1: 結果"
 ```
 
 ### Claude Codeでの使用
