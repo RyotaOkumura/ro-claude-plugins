@@ -196,9 +196,9 @@ add_caption() {
 
     local json_body
     if [[ -n "$after_block_id" ]]; then
-        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": $escaped_caption}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": $escaped_caption}}]}}]}"
     else
-        json_body="{\"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": $escaped_caption}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+        json_body="{\"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": $escaped_caption}}]}}]}"
     fi
 
     local response
@@ -261,9 +261,20 @@ upload_single() {
         return 0
     fi
 
-    # Step 3: Attach to page
+    # Step 3: Add caption first if provided (above image)
+    local insert_after="$after_block_id"
+    if [[ -n "$caption" ]]; then
+        local caption_block_id
+        caption_block_id=$(add_caption "$page_id" "$caption" "$after_block_id")
+        if [[ -n "$caption_block_id" ]]; then
+            info "  -> Caption: $caption" >&2
+            insert_after="$caption_block_id"
+        fi
+    fi
+
+    # Step 4: Attach image to page (after caption if exists)
     local block_id
-    block_id=$(attach_image "$page_id" "$upload_id" "$after_block_id")
+    block_id=$(attach_image "$page_id" "$upload_id" "$insert_after")
     if [[ -z "$block_id" ]]; then
         warn "  Failed to attach image: $file_path" >&2
         echo "$after_block_id"
@@ -271,17 +282,6 @@ upload_single() {
     fi
 
     info "  -> Uploaded: $filename (block: ${block_id:0:8}...)" >&2
-
-    # Step 4: Add caption if provided
-    if [[ -n "$caption" ]]; then
-        local caption_block_id
-        caption_block_id=$(add_caption "$page_id" "$caption" "$block_id")
-        if [[ -n "$caption_block_id" ]]; then
-            info "  -> Caption: $caption" >&2
-            echo "$caption_block_id"
-            return 0
-        fi
-    fi
 
     echo "$block_id"
 }

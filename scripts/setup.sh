@@ -109,17 +109,36 @@ EOF
         info "作成完了: $CONFIG_FILE"
     fi
 
-    # Step 3: Create bin directory and symlink
+    # Step 3: Create bin directory and symlinks
     step "コマンドをPATHに追加..."
     mkdir -p "$BIN_DIR"
 
+    # notion-upload
+    local UPLOAD_SCRIPT="$REPO_DIR/plugins/notion-image/scripts/upload_to_notion.sh"
     if [[ -L "$BIN_DIR/notion-upload" ]]; then
         rm "$BIN_DIR/notion-upload"
     fi
-
-    ln -s "$SCRIPT_PATH" "$BIN_DIR/notion-upload"
-    chmod +x "$SCRIPT_PATH"
+    ln -s "$UPLOAD_SCRIPT" "$BIN_DIR/notion-upload"
+    chmod +x "$UPLOAD_SCRIPT"
     info "シンボリックリンク作成: $BIN_DIR/notion-upload"
+
+    # notion-get-blocks
+    local BLOCKS_SCRIPT="$REPO_DIR/plugins/notion-image/scripts/notion_get_blocks.sh"
+    if [[ -L "$BIN_DIR/notion-get-blocks" ]]; then
+        rm "$BIN_DIR/notion-get-blocks"
+    fi
+    ln -s "$BLOCKS_SCRIPT" "$BIN_DIR/notion-get-blocks"
+    chmod +x "$BLOCKS_SCRIPT"
+    info "シンボリックリンク作成: $BIN_DIR/notion-get-blocks"
+
+    # notion-upload-batch
+    local BATCH_SCRIPT="$REPO_DIR/plugins/notion-image/scripts/upload_to_notion_batch.sh"
+    if [[ -L "$BIN_DIR/notion-upload-batch" ]]; then
+        rm "$BIN_DIR/notion-upload-batch"
+    fi
+    ln -s "$BATCH_SCRIPT" "$BIN_DIR/notion-upload-batch"
+    chmod +x "$BATCH_SCRIPT"
+    info "シンボリックリンク作成: $BIN_DIR/notion-upload-batch"
 
     # Check if ~/bin is in PATH
     if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then

@@ -159,9 +159,9 @@ add_caption() {
 
     local json_body
     if [[ -n "$after_block_id" ]]; then
-        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}}]}}]}"
     else
-        json_body="{\"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+        json_body="{\"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}}]}}]}"
     fi
 
     local response
@@ -218,24 +218,29 @@ upload_to_notion() {
 
     # Step 3: Attach to page (if page_id provided)
     local image_block_id=""
+    local caption_block_id=""
     if [[ -n "$page_id" ]]; then
-        info "Step 3/$steps_total: Attaching to page..."
-        image_block_id=$(attach_to_page "$page_id" "$upload_id" "$after_block_id")
+        # If caption is provided, add it first (above the image)
+        if [[ -n "$caption" ]]; then
+            info "Step 3/$steps_total: Adding caption (above image)..."
+            caption_block_id=$(add_caption "$page_id" "$caption" "$after_block_id")
+            info "  -> Caption added: $caption"
+            info "  -> Caption block ID: $caption_block_id"
+
+            # Image will be inserted after the caption
+            info "Step 4/$steps_total: Attaching image..."
+            image_block_id=$(attach_to_page "$page_id" "$upload_id" "$caption_block_id")
+        else
+            info "Step 3/$steps_total: Attaching to page..."
+            image_block_id=$(attach_to_page "$page_id" "$upload_id" "$after_block_id")
+        fi
+
         if [[ -n "$after_block_id" ]]; then
             info "  -> Inserted after block: $after_block_id"
         else
             info "  -> Appended to page: $page_id"
         fi
         info "  -> Image block ID: $image_block_id"
-
-        # Step 4: Add caption (if provided)
-        if [[ -n "$caption" ]]; then
-            info "Step 4/$steps_total: Adding caption..."
-            local caption_block_id
-            caption_block_id=$(add_caption "$page_id" "$caption" "$image_block_id")
-            info "  -> Caption added: $caption"
-            info "  -> Caption block ID: $caption_block_id"
-        fi
     else
         warn "Step 3/$steps_total: Skipped (no page_id provided)"
         echo ""
@@ -248,10 +253,8 @@ upload_to_notion() {
     echo ""
     info "Upload successful!"
 
-    # Output the last block ID for chaining
-    if [[ -n "$caption" && -n "$caption_block_id" ]]; then
-        echo "LAST_BLOCK_ID=$caption_block_id"
-    elif [[ -n "$image_block_id" ]]; then
+    # Output the last block ID for chaining (always image, since caption is above)
+    if [[ -n "$image_block_id" ]]; then
         echo "LAST_BLOCK_ID=$image_block_id"
     fi
 }

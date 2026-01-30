@@ -163,7 +163,17 @@ Notionに画像を直接アップロードするスキル（Notion File Uploads 
 
 **使用例:**
 ```bash
+# 画像をページ末尾にアップロード
 notion-upload /tmp/screenshot.png PAGE_ID
+
+# ブロックIDを取得（特定位置に挿入する場合）
+notion-get-blocks PAGE_ID
+
+# 特定ブロックの後に挿入
+notion-upload /tmp/screenshot.png PAGE_ID --after BLOCK_ID
+
+# キャプション付きで挿入（キャプションは画像の上に表示）
+notion-upload /tmp/screenshot.png PAGE_ID --after BLOCK_ID --caption "Figure 1"
 ```
 
 **制限事項:**
@@ -223,6 +233,7 @@ gemini-review "このコードをレビューして"
 
 # notion-image
 notion-upload /path/to/image.png PAGE_ID
+notion-get-blocks PAGE_ID  # ブロックID取得
 ```
 
 ## License

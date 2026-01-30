@@ -23,8 +23,14 @@ description: 画像をNotionに直接アップロード。使用場面: (1) Noti
 
 ## 実行コマンド
 
+### 画像アップロード
 ```bash
 notion-upload <image_file_path> [page_id] [options]
+```
+
+### ブロックID取得（--after用）
+```bash
+notion-get-blocks <page_id>
 ```
 
 ## パラメータ
@@ -39,7 +45,7 @@ notion-upload <image_file_path> [page_id] [options]
 | オプション | 説明 |
 |-----------|------|
 | `--after <block_id>` | 指定したブロックIDの直後に画像を挿入（省略時はページ末尾に追加） |
-| `--caption <text>` | 画像の下にキャプションテキストを追加 |
+| `--caption <text>` | 画像の上にキャプションテキストを追加 |
 
 ## 出力形式
 
@@ -81,6 +87,9 @@ notion-upload /tmp/screenshot.png abc123def456
 ### 特定位置に挿入
 
 ```bash
+# まずブロックIDを取得
+notion-get-blocks PAGE_ID
+
 # 指定ブロックの直後に挿入
 notion-upload /tmp/screenshot.png PAGE_ID --after BLOCK_ID
 
