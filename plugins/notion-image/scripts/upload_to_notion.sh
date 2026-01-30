@@ -47,7 +47,9 @@ Optionally:
     set +a
 
     # Validate required variables
-    [[ -z "$NOTION_TOKEN" ]] && error "NOTION_TOKEN not set"
+    if [[ -z "$NOTION_TOKEN" ]]; then
+        error "NOTION_TOKEN not set"
+    fi
 }
 
 # Detect MIME type from file extension
@@ -68,11 +70,15 @@ get_mime_type() {
 
 # Step 1: Create file upload object
 create_file_upload() {
+    local filename="$1"
+    local content_type="$2"
+
     local response
     response=$(curl -s -X POST "https://api.notion.com/v1/file_uploads" \
         -H "Authorization: Bearer $NOTION_TOKEN" \
         -H "Notion-Version: 2022-06-28" \
-        -H "Content-Type: application/json")
+        -H "Content-Type: application/json" \
+        -d "{\"mode\": \"single_part\", \"name\": \"$filename\", \"content_type\": \"$content_type\"}")
 
     # Extract ID from response
     local upload_id
@@ -144,8 +150,10 @@ upload_to_notion() {
 
     # Step 1: Create upload object
     info "Step 1/3: Creating upload object..."
+    local filename
+    filename=$(basename "$local_file")
     local upload_id
-    upload_id=$(create_file_upload)
+    upload_id=$(create_file_upload "$filename" "$content_type")
     info "  -> Upload ID: $upload_id"
 
     # Step 2: Send file
