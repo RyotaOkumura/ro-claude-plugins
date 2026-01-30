@@ -1,7 +1,7 @@
 ---
 name: notion-image
-description: 画像ファイルをNotionに直接アップロードする。Notionに画像を追加したい時やスクリーンショットを共有したい時に使用する。
-allowed-tools: Bash(notion-upload:*)
+description: 画像ファイルをNotionに直接アップロードする。使用場面: Notionに画像を追加したい時、スクリーンショットを共有したい時。トリガー: notion画像, 画像アップロード, Notionにアップロード
+allowed-tools: Bash(notion-upload:*), Bash(notion-get-blocks:*)
 ---
 
 # Notion Image Upload
@@ -22,6 +22,7 @@ allowed-tools: Bash(notion-upload:*)
 
 - **コマンド** がPATHに追加されていること
   - `notion-upload` コマンドが使用可能
+  - `notion-get-blocks` コマンドが使用可能
 
 ## 実行コマンド
 

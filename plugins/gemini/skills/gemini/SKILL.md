@@ -1,6 +1,6 @@
 ---
 name: gemini
-description: Gemini CLI を使用してコードやアーキテクチャをレビューし、改善提案や技術的な相談に対応する。コードレビュー、実装方針の相談、バグ調査、リファクタリング提案に使用する。
+description: Gemini CLI を使用したコードレビュー・分析・相談を実行する。使用場面: コードレビュー依頼時、実装方針の相談、バグの調査、リファクタリング提案、解消が難しい問題の調査。トリガー: gemini, geminiでレビュー, geminiに相談
 allowed-tools: Bash(gemini:*)
 ---
 
