@@ -116,13 +116,23 @@ send_file() {
 attach_to_page() {
     local page_id="$1"
     local upload_id="$2"
+    local after_block_id="$3"
+
+    local json_body
+    if [[ -n "$after_block_id" ]]; then
+        # Insert after specific block
+        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"image\", \"image\": {\"type\": \"file_upload\", \"file_upload\": {\"id\": \"$upload_id\"}}}]}"
+    else
+        # Append to end (default behavior)
+        json_body="{\"children\": [{\"type\": \"image\", \"image\": {\"type\": \"file_upload\", \"file_upload\": {\"id\": \"$upload_id\"}}}]}"
+    fi
 
     local response
     response=$(curl -s -X PATCH "https://api.notion.com/v1/blocks/$page_id/children" \
         -H "Authorization: Bearer $NOTION_TOKEN" \
         -H "Notion-Version: 2022-06-28" \
         -H "Content-Type: application/json" \
-        -d "{\"children\": [{\"type\": \"image\", \"image\": {\"type\": \"file_upload\", \"file_upload\": {\"id\": \"$upload_id\"}}}]}")
+        -d "$json_body")
 
     # Check for error
     if echo "$response" | grep -q '"results"'; then
@@ -137,6 +147,7 @@ attach_to_page() {
 upload_to_notion() {
     local local_file="$1"
     local page_id="$2"
+    local after_block_id="$3"
 
     # Validate file exists
     [[ ! -f "$local_file" ]] && error "File not found: $local_file"
@@ -164,8 +175,12 @@ upload_to_notion() {
     # Step 3: Attach to page (if page_id provided)
     if [[ -n "$page_id" ]]; then
         info "Step 3/3: Attaching to page..."
-        attach_to_page "$page_id" "$upload_id"
-        info "  -> Attached to page: $page_id"
+        attach_to_page "$page_id" "$upload_id" "$after_block_id"
+        if [[ -n "$after_block_id" ]]; then
+            info "  -> Inserted after block: $after_block_id"
+        else
+            info "  -> Appended to page: $page_id"
+        fi
     else
         warn "Step 3/3: Skipped (no page_id provided)"
         echo ""
@@ -181,7 +196,7 @@ upload_to_notion() {
 
 # Show usage
 usage() {
-    echo "Usage: $0 <image_file_path> [page_id]"
+    echo "Usage: $0 <image_file_path> [page_id] [after_block_id]"
     echo ""
     echo "Uploads an image directly to Notion using the File Uploads API."
     echo ""
@@ -189,12 +204,15 @@ usage() {
     echo "  <image_file_path>  Path to the image file (required)"
     echo "  [page_id]          Notion page ID to attach the image (optional)"
     echo "                     If not provided, uses DEFAULT_PAGE_ID from config"
+    echo "  [after_block_id]   Block ID to insert the image after (optional)"
+    echo "                     If not provided, appends to the end of the page"
     echo ""
     echo "Supported formats: png, jpg, jpeg, gif, webp, svg"
     echo ""
     echo "Examples:"
     echo "  $0 /path/to/image.png"
     echo "  $0 /path/to/image.png abc123def456..."
+    echo "  $0 /path/to/image.png abc123def456... xyz789ghi012..."
 }
 
 # Main entry point
@@ -208,8 +226,9 @@ main() {
 
     local file_path="$1"
     local page_id="${2:-$DEFAULT_PAGE_ID}"
+    local after_block_id="$3"
 
-    upload_to_notion "$file_path" "$page_id"
+    upload_to_notion "$file_path" "$page_id" "$after_block_id"
 }
 
 main "$@"
