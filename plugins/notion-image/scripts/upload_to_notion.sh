@@ -112,7 +112,7 @@ send_file() {
     fi
 }
 
-# Step 3: Attach image to page
+# Step 3: Attach image to page (returns the created block ID)
 attach_to_page() {
     local page_id="$1"
     local upload_id="$2"
@@ -134,12 +134,52 @@ attach_to_page() {
         -H "Content-Type: application/json" \
         -d "$json_body")
 
-    # Check for error
+    # Check for error and extract block ID
     if echo "$response" | grep -q '"results"'; then
+        # Extract the created block ID for chaining
+        local block_id
+        block_id=$(echo "$response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+        echo "$block_id"
         return 0
     else
         echo "API Response: $response" >&2
         error "Failed to attach image to page"
+    fi
+}
+
+# Add caption text block after image
+add_caption() {
+    local page_id="$1"
+    local caption_text="$2"
+    local after_block_id="$3"
+
+    # Escape special characters in caption for JSON
+    local escaped_caption
+    escaped_caption=$(echo "$caption_text" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g')
+
+    local json_body
+    if [[ -n "$after_block_id" ]]; then
+        json_body="{\"after\": \"$after_block_id\", \"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+    else
+        json_body="{\"children\": [{\"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"$escaped_caption\"}, \"annotations\": {\"italic\": true, \"color\": \"gray\"}}]}}]}"
+    fi
+
+    local response
+    response=$(curl -s -X PATCH "https://api.notion.com/v1/blocks/$page_id/children" \
+        -H "Authorization: Bearer $NOTION_TOKEN" \
+        -H "Notion-Version: 2022-06-28" \
+        -H "Content-Type: application/json" \
+        -d "$json_body")
+
+    # Check for error and return block ID
+    if echo "$response" | grep -q '"results"'; then
+        local block_id
+        block_id=$(echo "$response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+        echo "$block_id"
+        return 0
+    else
+        echo "API Response: $response" >&2
+        error "Failed to add caption"
     fi
 }
 
@@ -148,6 +188,7 @@ upload_to_notion() {
     local local_file="$1"
     local page_id="$2"
     local after_block_id="$3"
+    local caption="$4"
 
     # Validate file exists
     [[ ! -f "$local_file" ]] && error "File not found: $local_file"
@@ -160,7 +201,10 @@ upload_to_notion() {
     info "  -> Content-Type: $content_type"
 
     # Step 1: Create upload object
-    info "Step 1/3: Creating upload object..."
+    local steps_total=3
+    [[ -n "$caption" ]] && steps_total=4
+
+    info "Step 1/$steps_total: Creating upload object..."
     local filename
     filename=$(basename "$local_file")
     local upload_id
@@ -168,21 +212,32 @@ upload_to_notion() {
     info "  -> Upload ID: $upload_id"
 
     # Step 2: Send file
-    info "Step 2/3: Sending file..."
+    info "Step 2/$steps_total: Sending file..."
     send_file "$upload_id" "$local_file"
     info "  -> File sent successfully"
 
     # Step 3: Attach to page (if page_id provided)
+    local image_block_id=""
     if [[ -n "$page_id" ]]; then
-        info "Step 3/3: Attaching to page..."
-        attach_to_page "$page_id" "$upload_id" "$after_block_id"
+        info "Step 3/$steps_total: Attaching to page..."
+        image_block_id=$(attach_to_page "$page_id" "$upload_id" "$after_block_id")
         if [[ -n "$after_block_id" ]]; then
             info "  -> Inserted after block: $after_block_id"
         else
             info "  -> Appended to page: $page_id"
         fi
+        info "  -> Image block ID: $image_block_id"
+
+        # Step 4: Add caption (if provided)
+        if [[ -n "$caption" ]]; then
+            info "Step 4/$steps_total: Adding caption..."
+            local caption_block_id
+            caption_block_id=$(add_caption "$page_id" "$caption" "$image_block_id")
+            info "  -> Caption added: $caption"
+            info "  -> Caption block ID: $caption_block_id"
+        fi
     else
-        warn "Step 3/3: Skipped (no page_id provided)"
+        warn "Step 3/$steps_total: Skipped (no page_id provided)"
         echo ""
         info "To attach later, use:"
         echo "  Upload ID: $upload_id"
@@ -192,11 +247,18 @@ upload_to_notion() {
 
     echo ""
     info "Upload successful!"
+
+    # Output the last block ID for chaining
+    if [[ -n "$caption" && -n "$caption_block_id" ]]; then
+        echo "LAST_BLOCK_ID=$caption_block_id"
+    elif [[ -n "$image_block_id" ]]; then
+        echo "LAST_BLOCK_ID=$image_block_id"
+    fi
 }
 
 # Show usage
 usage() {
-    echo "Usage: $0 <image_file_path> [page_id] [after_block_id]"
+    echo "Usage: $0 <image_file_path> [page_id] [options]"
     echo ""
     echo "Uploads an image directly to Notion using the File Uploads API."
     echo ""
@@ -204,15 +266,18 @@ usage() {
     echo "  <image_file_path>  Path to the image file (required)"
     echo "  [page_id]          Notion page ID to attach the image (optional)"
     echo "                     If not provided, uses DEFAULT_PAGE_ID from config"
-    echo "  [after_block_id]   Block ID to insert the image after (optional)"
-    echo "                     If not provided, appends to the end of the page"
+    echo ""
+    echo "Options:"
+    echo "  --after <block_id>   Block ID to insert the image after"
+    echo "  --caption <text>     Caption text to add below the image"
     echo ""
     echo "Supported formats: png, jpg, jpeg, gif, webp, svg"
     echo ""
     echo "Examples:"
     echo "  $0 /path/to/image.png"
     echo "  $0 /path/to/image.png abc123def456..."
-    echo "  $0 /path/to/image.png abc123def456... xyz789ghi012..."
+    echo "  $0 /path/to/image.png page_id --caption 'Figure 1: Results'"
+    echo "  $0 /path/to/image.png page_id --after block_id --caption 'Figure 1'"
 }
 
 # Main entry point
@@ -224,11 +289,54 @@ main() {
 
     load_config
 
-    local file_path="$1"
-    local page_id="${2:-$DEFAULT_PAGE_ID}"
-    local after_block_id="$3"
+    local file_path=""
+    local page_id=""
+    local after_block_id=""
+    local caption=""
 
-    upload_to_notion "$file_path" "$page_id" "$after_block_id"
+    # Parse arguments
+    local positional_args=()
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --after)
+                after_block_id="$2"
+                shift 2
+                ;;
+            --caption)
+                caption="$2"
+                shift 2
+                ;;
+            --help|-h)
+                usage
+                exit 0
+                ;;
+            -*)
+                error "Unknown option: $1"
+                ;;
+            *)
+                positional_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Extract positional arguments
+    if [[ ${#positional_args[@]} -ge 1 ]]; then
+        file_path="${positional_args[0]}"
+    fi
+    if [[ ${#positional_args[@]} -ge 2 ]]; then
+        page_id="${positional_args[1]}"
+    else
+        page_id="$DEFAULT_PAGE_ID"
+    fi
+
+    # Validate file_path
+    if [[ -z "$file_path" ]]; then
+        usage
+        exit 1
+    fi
+
+    upload_to_notion "$file_path" "$page_id" "$after_block_id" "$caption"
 }
 
 main "$@"
