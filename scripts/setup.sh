@@ -21,6 +21,52 @@ warn() { echo -e "${YELLOW}!${NC} $1"; }
 error() { echo -e "${RED}✗${NC} $1" >&2; }
 step() { echo -e "${BLUE}→${NC} $1"; }
 
+# Enable plugin in ~/.claude/settings.json
+# Usage: enable_plugin <plugin_name>
+enable_plugin() {
+    local plugin_name="$1"
+    local plugin_key="${plugin_name}@tk-plugins"
+    local settings_file="$HOME/.claude/settings.json"
+
+    step "プラグインを有効化: $plugin_key"
+
+    mkdir -p "$HOME/.claude"
+
+    # Create settings.json if it doesn't exist
+    if [[ ! -f "$settings_file" ]]; then
+        echo '{"enabledPlugins":{}}' > "$settings_file"
+    fi
+
+    # Check if jq is available
+    if command -v jq &> /dev/null; then
+        # Use jq for JSON manipulation
+        local tmp_file=$(mktemp)
+        jq --arg key "$plugin_key" '.enabledPlugins[$key] = true' "$settings_file" > "$tmp_file"
+        mv "$tmp_file" "$settings_file"
+        info "有効化完了: $plugin_key"
+    else
+        # Fallback: simple text manipulation (less robust but works for simple cases)
+        if grep -q "\"$plugin_key\"" "$settings_file" 2>/dev/null; then
+            info "既に有効: $plugin_key"
+        else
+            # Add plugin to enabledPlugins
+            if grep -q '"enabledPlugins": {}' "$settings_file" 2>/dev/null; then
+                # Empty enabledPlugins
+                sed -i.bak "s/\"enabledPlugins\": {}/\"enabledPlugins\": {\"$plugin_key\": true}/" "$settings_file"
+            elif grep -q '"enabledPlugins": {' "$settings_file" 2>/dev/null; then
+                # Non-empty enabledPlugins - add before closing brace
+                sed -i.bak "s/\"enabledPlugins\": {/\"enabledPlugins\": {\"$plugin_key\": true, /" "$settings_file"
+            else
+                warn "settings.json の形式が不明です。手動で追加してください:"
+                echo "  \"$plugin_key\": true"
+                return
+            fi
+            rm -f "${settings_file}.bak"
+            info "有効化完了: $plugin_key"
+        fi
+    fi
+}
+
 # Register skill to ~/.claude/skills/
 # Usage: register_skill <skill_name> <skill_path>
 register_skill() {
@@ -75,6 +121,7 @@ setup_notion_image() {
     echo ""
 
     register_skill "notion-image" "$REPO_DIR/plugins/notion-image/skills/notion-image"
+    enable_plugin "notion-image"
 
     CONFIG_DIR="$HOME/.config/notion-image"
     CONFIG_FILE="$CONFIG_DIR/.env"
@@ -180,6 +227,7 @@ setup_codex() {
     echo ""
 
     register_skill "codex" "$REPO_DIR/plugins/codex/skills/codex"
+    enable_plugin "codex"
 
     CONFIG_DIR="$HOME/.config/codex"
     CONFIG_FILE="$CONFIG_DIR/.env"
@@ -264,6 +312,7 @@ setup_gemini() {
     echo ""
 
     register_skill "gemini" "$REPO_DIR/plugins/gemini/skills/gemini"
+    enable_plugin "gemini"
 
     CONFIG_DIR="$HOME/.config/gemini"
     CONFIG_FILE="$CONFIG_DIR/.env"
