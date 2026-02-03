@@ -67,6 +67,83 @@ enable_plugin() {
     fi
 }
 
+# Install plugin to ~/.claude/plugins/cache/ and register in installed_plugins.json
+# Usage: install_plugin <plugin_name>
+install_plugin() {
+    local plugin_name="$1"
+    local plugin_key="${plugin_name}@tk-plugins"
+    local plugin_src="$REPO_DIR/plugins/$plugin_name"
+    local plugin_json="$plugin_src/.claude-plugin/plugin.json"
+    local installed_plugins_file="$HOME/.claude/plugins/installed_plugins.json"
+
+    # Read version from plugin.json
+    if [[ ! -f "$plugin_json" ]]; then
+        error "plugin.json が見つかりません: $plugin_json"
+        return 1
+    fi
+
+    local version
+    if command -v jq &> /dev/null; then
+        version=$(jq -r '.version' "$plugin_json")
+    else
+        version=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$plugin_json" | sed 's/.*"\([^"]*\)"$/\1/')
+    fi
+
+    if [[ -z "$version" ]]; then
+        error "バージョンを取得できません"
+        return 1
+    fi
+
+    step "プラグインをインストール: $plugin_key (v$version)"
+
+    # Create cache directory and copy plugin
+    local cache_dir="$HOME/.claude/plugins/cache/tk-plugins/$plugin_name/$version"
+    mkdir -p "$cache_dir"
+
+    # Copy plugin contents (excluding .git, scripts, etc.)
+    rsync -a --delete \
+        --exclude='.git' \
+        --exclude='scripts/' \
+        "$plugin_src/" "$cache_dir/"
+
+    info "コピー完了: $cache_dir"
+
+    # Update installed_plugins.json
+    mkdir -p "$HOME/.claude/plugins"
+
+    if [[ ! -f "$installed_plugins_file" ]]; then
+        echo '{"version":2,"plugins":{}}' > "$installed_plugins_file"
+    fi
+
+    local current_time=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+    local git_sha=""
+    if [[ -d "$REPO_DIR/.git" ]]; then
+        git_sha=$(cd "$REPO_DIR" && git rev-parse HEAD 2>/dev/null || echo "")
+    fi
+
+    if command -v jq &> /dev/null; then
+        local tmp_file=$(mktemp)
+        jq --arg key "$plugin_key" \
+           --arg path "$cache_dir" \
+           --arg ver "$version" \
+           --arg time "$current_time" \
+           --arg sha "$git_sha" \
+           '.plugins[$key] = [{
+               "scope": "user",
+               "installPath": $path,
+               "version": $ver,
+               "installedAt": $time,
+               "lastUpdated": $time,
+               "gitCommitSha": $sha
+           }]' "$installed_plugins_file" > "$tmp_file"
+        mv "$tmp_file" "$installed_plugins_file"
+        info "installed_plugins.json 更新完了"
+    else
+        warn "jq がインストールされていないため、installed_plugins.json を手動で更新してください"
+        echo "  $plugin_key を追加してください"
+    fi
+}
+
 # Register skill to ~/.claude/skills/
 # Usage: register_skill <skill_name> <skill_path>
 register_skill() {
@@ -120,6 +197,7 @@ setup_notion_image() {
     echo "================================"
     echo ""
 
+    install_plugin "notion-image"
     register_skill "notion-image" "$REPO_DIR/plugins/notion-image/skills/notion-image"
     enable_plugin "notion-image"
 
@@ -226,6 +304,7 @@ setup_codex() {
     echo "================================"
     echo ""
 
+    install_plugin "codex"
     register_skill "codex" "$REPO_DIR/plugins/codex/skills/codex"
     enable_plugin "codex"
 
@@ -311,6 +390,7 @@ setup_gemini() {
     echo "================================"
     echo ""
 
+    install_plugin "gemini"
     register_skill "gemini" "$REPO_DIR/plugins/gemini/skills/gemini"
     enable_plugin "gemini"
 
