@@ -23,9 +23,6 @@ while [ -h "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 
-# notion-image plugin directory
-NOTION_IMAGE_DIR="$(dirname "$SCRIPT_DIR")/../notion-image/scripts"
-
 # Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -124,11 +121,7 @@ main() {
     local batch_args=("$tmp_json" "$page_id")
     [[ "$dry_run" == true ]] && batch_args+=("--dry-run")
 
-    if [[ -f "$NOTION_IMAGE_DIR/upload_to_notion_batch.sh" ]]; then
-        "$NOTION_IMAGE_DIR/upload_to_notion_batch.sh" "${batch_args[@]}"
-    else
-        error "notion-image plugin not found at: $NOTION_IMAGE_DIR"
-    fi
+    "$SCRIPT_DIR/upload_to_notion_batch.sh" "${batch_args[@]}"
 }
 
 main "$@"

@@ -1,7 +1,0 @@
-{
-  "name": "notion-markdown",
-  "version": "1.0.0",
-  "description": "MarkdownファイルをNotionページにアップロードするスキル（テキスト + 画像）",
-  "keywords": ["notion", "markdown", "upload", "text", "image"],
-  "skills": ["./skills/notion-markdown"]
-}
