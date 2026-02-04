@@ -72,11 +72,33 @@ main() {
     local page_id="$2"
     shift 2
 
+    # Parse options
+    local replace_placeholder=false
+    local dry_run=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --replace-placeholder) replace_placeholder=true ;;
+            --dry-run) dry_run=true ;;
+            *) ;;
+        esac
+        shift
+    done
+
     # Validate markdown file
     if [[ ! -f "$md_file" ]]; then
         error "Markdown file not found: $md_file"
     fi
 
+    # Replace placeholder mode
+    if [[ "$replace_placeholder" == true ]]; then
+        info "Replacing placeholders in Notion page..."
+        local args=("$md_file" "$page_id")
+        [[ "$dry_run" == true ]] && args+=("--dry-run")
+        python3 "$SCRIPT_DIR/replace_placeholders.py" "${args[@]}"
+        exit $?
+    fi
+
+    # Default: append images to page end
     info "Extracting images from: $md_file"
 
     # Create temp file for image list
@@ -99,8 +121,11 @@ main() {
     info "Found $count images"
 
     # Call notion-image batch upload
+    local batch_args=("$tmp_json" "$page_id")
+    [[ "$dry_run" == true ]] && batch_args+=("--dry-run")
+
     if [[ -f "$NOTION_IMAGE_DIR/upload_to_notion_batch.sh" ]]; then
-        "$NOTION_IMAGE_DIR/upload_to_notion_batch.sh" "$tmp_json" "$page_id" "$@"
+        "$NOTION_IMAGE_DIR/upload_to_notion_batch.sh" "${batch_args[@]}"
     else
         error "notion-image plugin not found at: $NOTION_IMAGE_DIR"
     fi
