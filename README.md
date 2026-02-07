@@ -10,6 +10,7 @@ git clone https://github.com/your-username/tk-claude-plugins.git
 cd tk-claude-plugins
 
 # 全プラグインをセットアップ
+./scripts/setup.sh all
 
 # または個別にセットアップ
 ./scripts/setup.sh codex
